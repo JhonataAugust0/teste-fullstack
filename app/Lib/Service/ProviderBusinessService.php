@@ -1,6 +1,6 @@
 <?php
 /**
- * Provider Service
+ * Provider Business Service
  *
  * Camada de serviço responsável pela lógica de negócios relacionada a Prestadores.
  * Separa as regras de negócio da camada de apresentação (Controller).
@@ -10,7 +10,7 @@
 
 App::uses('AppModel', 'Model');
 
-class ProviderService {
+class ProviderBusinessService {
 
 /**
  * Instância do Model Provider
@@ -86,7 +86,11 @@ class ProviderService {
 
         return $this->_Provider->find('first', array(
             'conditions' => array('Provider.id' => $id),
-            'contain' => array('Service')
+            'contain' => array(
+                'ProviderService' => array(
+                    'Service'
+                )
+            )
         ));
     }
 
@@ -97,32 +101,46 @@ class ProviderService {
  * @return array Resultado da operação com status e mensagem
  */
     public function create($data) {
+    $dataSource = $this->_Provider->getDataSource();
+    $dataSource->begin();
+
+    try {
         $this->_Provider->create();
 
-        // Processa upload de foto se enviada
         $uploadResult = $this->_processPhotoUpload($data);
-        if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+
+        if (!$uploadResult['success']) {
             return array(
                 'success' => false,
-                'message' => $uploadResult['error']
+                'message' => isset($uploadResult['error']) ? $uploadResult['error'] : __('Erro no upload.')
             );
         }
+
         $data = $uploadResult['data'];
 
-        if ($this->_Provider->save($data)) {
+        if ($this->_Provider->saveAssociated($data, array('deep' => true))) {
+
+            $dataSource->commit();
+
             return array(
                 'success' => true,
-                'message' => __('Prestador salvo com sucesso.'),
+                'message' => __('Prestador e serviços salvos com sucesso.'),
                 'id' => $this->_Provider->id
             );
+        } else {
+            throw new Exception(__('Erro de validação'));
         }
+
+    } catch (Exception $e) {
+        $dataSource->rollback();
 
         return array(
             'success' => false,
-            'message' => __('Não foi possível salvar o prestador. Verifique os dados e tente novamente.'),
+            'message' => __('Não foi possível salvar. Verifique os campos destacados.'),
             'validationErrors' => $this->_Provider->validationErrors
         );
     }
+}
 
 /**
  * Atualiza um prestador existente
@@ -137,29 +155,44 @@ class ProviderService {
             throw new NotFoundException(__('Prestador não encontrado'));
         }
 
-        $data['Provider']['id'] = $id;
+        $dataSource = $this->_Provider->getDataSource();
+        $dataSource->begin();
 
-        $uploadResult = $this->_processPhotoUpload($data);
-        if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+        try {
+            $data['Provider']['id'] = $id;
+
+            $uploadResult = $this->_processPhotoUpload($data);
+            if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+                return array(
+                    'success' => false,
+                    'message' => $uploadResult['error']
+                );
+            }
+            $data = $uploadResult['data'];
+
+            // Remove vínculos antigos de ProviderService antes de salvar os novos
+            $ProviderService = ClassRegistry::init('ProviderService');
+            $ProviderService->deleteAll(array('ProviderService.provider_id' => $id), false);
+
+            // Salva Provider + novos vínculos (ProviderService)
+            if ($this->_Provider->saveAssociated($data, array('deep' => true))) {
+                $dataSource->commit();
+                return array(
+                    'success' => true,
+                    'message' => __('Prestador atualizado com sucesso.')
+                );
+            } else {
+                throw new Exception(__('Erro de validação'));
+            }
+
+        } catch (Exception $e) {
+            $dataSource->rollback();
             return array(
                 'success' => false,
-                'message' => $uploadResult['error']
+                'message' => __('Erro ao atualizar o prestador. Verifique os dados e tente novamente.'),
+                'validationErrors' => $this->_Provider->validationErrors
             );
         }
-        $data = $uploadResult['data'];
-
-        if ($this->_Provider->save($data)) {
-            return array(
-                'success' => true,
-                'message' => __('Prestador atualizado com sucesso.')
-            );
-        }
-
-        return array(
-            'success' => false,
-            'message' => __('Erro ao atualizar o prestador. Verifique os dados e tente novamente.'),
-            'validationErrors' => $this->_Provider->validationErrors
-        );
     }
 
 /**
@@ -181,7 +214,6 @@ class ProviderService {
         ));
 
         if ($this->_Provider->delete($id)) {
-            // Remove a foto do servidor se existir
             if (!empty($provider['Provider']['photo'])) {
                 $this->_removePhoto($provider['Provider']['photo']);
             }
@@ -205,7 +237,6 @@ class ProviderService {
  * @return array Dados processados com resultado do upload
  */
     protected function _processPhotoUpload($data) {
-        // Verifica se foi enviada uma foto
         if (empty($data['Provider']['photo']['name'])) {
             unset($data['Provider']['photo']);
             return array('success' => true, 'data' => $data);
@@ -239,7 +270,6 @@ class ProviderService {
             );
         }
 
-        // Move o arquivo
         if (move_uploaded_file($file['tmp_name'], $uploadPath . DS . $newName)) {
             $data['Provider']['photo'] = $this->_uploadDir . '/' . $newName;
             return array('success' => true, 'data' => $data);

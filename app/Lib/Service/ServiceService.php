@@ -20,10 +20,18 @@ class ServiceService {
     protected $_Service;
 
 /**
+ * Instância do Model Provider
+ *
+ * @var Provider
+ */
+    protected $_Provider;
+
+/**
  * Construtor
  */
     public function __construct() {
         $this->_Service = ClassRegistry::init('Service');
+        $this->_Provider = ClassRegistry::init('Provider');
     }
 
 /**
@@ -40,7 +48,11 @@ class ServiceService {
 
         return $this->_Service->find('first', array(
             'conditions' => array('Service.id' => $id),
-            'contain' => array('Provider')
+            'contain' => array(
+                'ProviderService' => array(
+                    'Provider'
+                )
+            )
         ));
     }
 
@@ -50,7 +62,7 @@ class ServiceService {
  * @return array Lista de prestadores no formato id => name
  */
     public function getProvidersList() {
-        return $this->_Service->Provider->find('list', array(
+        return $this->_Provider->find('list', array(
             'fields' => array('Provider.id', 'Provider.name'),
             'order' => array('Provider.name' => 'asc')
         ));

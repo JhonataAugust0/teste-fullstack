@@ -54,7 +54,6 @@ class ServicesController extends AppController {
 
         $this->Paginator->settings = $paginatorSettings;
         $this->set('services', $this->Paginator->paginate());
-        $this->set('providers', $this->_serviceService->getProvidersList());
         $this->set('search', $this->request->query('search'));
     }
 
@@ -91,10 +90,6 @@ class ServicesController extends AppController {
                 $this->Service->validationErrors = $result['validationErrors'];
             }
         }
-
-        // Lista de prestadores para o select
-        $providers = $this->_serviceService->getProvidersList();
-        $this->set(compact('providers'));
     }
 
 /**
@@ -125,10 +120,6 @@ class ServicesController extends AppController {
             // Preenche o formulário com os dados atuais
             $this->request->data = $service;
         }
-
-        // Lista de prestadores para o select
-        $providers = $this->_serviceService->getProvidersList();
-        $this->set(compact('providers'));
     }
 
 /**
