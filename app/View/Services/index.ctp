@@ -1,5 +1,19 @@
 <div class="services index">
 	<h2><?php echo __('Services'); ?></h2>
+	<div class="search-box" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #e1e1e1; border-radius: 4px;">
+		<?php
+		echo $this->Form->create('Service', array('type' => 'get', 'url' => array('action' => 'index')));
+		echo $this->Form->input('search', array(
+			'label' => false,
+			'placeholder' => 'Buscar serviço...',
+			'style' => 'width: 300px; display: inline-block;',
+			'value' => $this->request->query('search')
+		));
+		echo $this->Form->submit(__('Buscar'), array('div' => false, 'style' => 'display: inline-block; margin-left: 10px;'));
+		echo $this->Form->end();
+		?>
+	</div>
+	<hr>
 	<table cellpadding="0" cellspacing="0">
 	<thead>
 	<tr>
