@@ -1,12 +1,12 @@
 <div class="providers form">
-<?php echo $this->Form->create('Provider'); ?>
+<?php echo $this->Form->create('Provider', array('type' => 'file')); ?>
 	<fieldset>
 		<legend><?php echo __('Add Provider'); ?></legend>
 	<?php
 		echo $this->Form->input('name');
 		echo $this->Form->input('email');
 		echo $this->Form->input('phone');
-		echo $this->Form->input('photo');
+		echo $this->Form->input('photo', array('type' => 'file', 'label' => 'Foto do Perfil'));
 	?>
 	</fieldset>
 <?php echo $this->Form->end(__('Submit')); ?>
