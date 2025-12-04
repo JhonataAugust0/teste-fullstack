@@ -78,21 +78,21 @@ class Service extends AppModel {
                 'allowEmpty' => true,
             ),
         ),
-        'value' => array(
-            'notBlank' => array(
-                'rule' => array('notBlank'),
-                'message' => 'O valor é obrigatório.',
-                'required' => true,
-            ),
-            'numeric' => array(
-                'rule' => array('numeric'),
-                'message' => 'Informe um valor numérico válido.',
-            ),
-            'positiveValue' => array(
-                'rule' => array('comparison', '>', 0),
-                'message' => 'O valor deve ser maior que zero.',
-            ),
-        ),
+		'value' => array(
+			'notBlank' => array(
+				'rule' => array('notBlank'),
+				'message' => 'O valor é obrigatório.',
+				'last' => true,
+			),
+			'validAmount' => array(
+				// REGEX: Aceita números inteiros OU decimais com ponto ou vírgula
+				// ^\d+        -> Começa com um ou mais dígitos
+				// ([.,]\d{1,2})? -> Opcionalmente tem ponto/vírgula seguido de 1 ou 2 dígitos
+				// $           -> Fim da string
+				'rule' => array('custom', '/^\d+([.,]\d{1,2})?$/'),
+				'message' => 'Informe um valor válido (ex: 100, 100.00 ou 100,50)',
+			),
+		),
     );
 
 /**
@@ -133,14 +133,11 @@ class Service extends AppModel {
  * @return bool
  */
     public function beforeSave($options = array()) {
-        // Garante que o valor está no formato correto (decimal)
         if (!empty($this->data[$this->alias]['value'])) {
-            $this->data[$this->alias]['value'] = $this->_sanitizeDecimalValue(
-                $this->data[$this->alias]['value']
-            );
+            // Troca vírgula por ponto para compatibiidade com o MySQL (100,50 -> 100.50)
+            $this->data[$this->alias]['value'] = str_replace(',', '.', $this->data[$this->alias]['value']);
         }
-
-        return parent::beforeSave($options);
+        return true;
     }
 
 /**
