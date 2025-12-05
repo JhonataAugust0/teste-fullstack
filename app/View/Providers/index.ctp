@@ -6,7 +6,13 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
                 <div>
                     <h2 class="fw-bold mb-1 fs-3">Prestadores de Serviço</h2>
-                    <p class="text-muted mb-0 d-none d-md-block">Veja sua lista de prestadores de serviço</p>
+                    <p class="text-muted mb-0 small">
+                        <?php if (isset($providersCount)): ?>
+                            <?php echo $providersCount; ?> prestador(es) encontrado(s)
+                        <?php else: ?>
+                            Veja sua lista de prestadores de serviço
+                        <?php endif; ?>
+                    </p>
                 </div>
 
                 <div class="d-flex gap-2 flex-shrink-0">
@@ -23,28 +29,49 @@
 
             <div class="mb-4">
                 <?php echo $this->Form->create('Provider', array('type' => 'get', 'url' => array('action' => 'index'))); ?>
-                <div class="input-group" style="max-width: 100%;">
-                    <span class="input-group-text bg-white border-end-0 ps-3">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <?php echo $this->Form->input('search', array(
-                        'label' => false,
-                        'div' => false,
-                        'class' => 'form-control border-start-0 ps-2',
-                        'placeholder' => 'Buscar por nome, email ou telefone...',
-                        'value' => $this->request->query('search')
-                    )); ?>
+                <div class="row g-2">
+                    <div class="col-12 col-lg-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 ps-3">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <?php echo $this->Form->input('search', array(
+                                'label' => false,
+                                'div' => false,
+                                'class' => 'form-control border-start-0 border-end-0 ps-2',
+                                'placeholder' => 'Buscar por nome, email, telefone ou serviço...',
+                                'value' => $this->request->query('search')
+                            )); ?>
+                            <button type="submit" class="btn btn-outline-secondary border-start-0 bg-white">
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <select name="sort" class="form-select w-100" onchange="this.form.submit()">
+                            <option value="">Ordenar por</option>
+                            <option value="name" <?php echo ($this->request->query('sort') == 'name') ? 'selected' : ''; ?>>Nome</option>
+                            <option value="email" <?php echo ($this->request->query('sort') == 'email') ? 'selected' : ''; ?>>Email</option>
+                            <option value="value" <?php echo ($this->request->query('sort') == 'value') ? 'selected' : ''; ?>>Valor</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <select name="direction" class="form-select w-100" onchange="this.form.submit()">
+                            <option value="asc" <?php echo ($this->request->query('direction') == 'asc') ? 'selected' : ''; ?>>Crescente</option>
+                            <option value="desc" <?php echo ($this->request->query('direction') == 'desc' || !$this->request->query('direction')) ? 'selected' : ''; ?>>Decrescente</option>
+                        </select>
+                    </div>
                 </div>
                 <?php echo $this->Form->end(); ?>
             </div>
 
             <?php if (!empty($this->request->query('search'))): ?>
-                <div class="alert alert-light border d-flex align-items-center justify-content-between mb-4" style="background-color: #F9FAFB;">
+                <div class="alert alert-light border d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-4" style="background-color: #F9FAFB;">
                     <div class="text-muted small">
                         <i class="bi bi-funnel me-1"></i>
                         Exibindo resultados para: <strong><?php echo h($this->request->query('search')); ?></strong>
                     </div>
-                    <a href="<?php echo $this->Html->url(array('action' => 'index')); ?>" class="text-decoration-none small text-danger fw-bold">
+                    <a href="<?php echo $this->Html->url(array('action' => 'index')); ?>" class="text-decoration-none small text-danger fw-bold text-nowrap">
                         <i class="bi bi-x-lg me-1"></i> Limpar filtro
                     </a>
                 </div>
@@ -55,7 +82,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th scope="col" class="py-3 ps-3 text-secondary small fw-bold" style="min-width: 200px;">
-                                <?php echo $this->Paginator->sort('name', 'Prestador', array('class' => 'text-decoration-none text-secondary d-inline-flex align-items-center gap-1')); ?>
+                                Prestador
                             </th>
 
                             <th scope="col" class="py-3 text-secondary small fw-bold d-none d-md-table-cell" style="width: 20%;">
@@ -75,13 +102,33 @@
                     <tbody>
                         <?php if (empty($providers)): ?>
                             <tr>
-                                <td colspan="4" class="text-center py-5 text-muted">
-                                    Nenhum prestador encontrado.
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <div class="mb-3">
+                                            <i class="bi bi-people text-muted" style="font-size: 3rem; opacity: 0.5;"></i>
+                                        </div>
+                                        <p class="text-muted mb-3">
+                                            <?php if (!empty($this->request->query('search'))): ?>
+                                                Nenhum prestador encontrado para "<strong><?php echo h($this->request->query('search')); ?></strong>".
+                                            <?php else: ?>
+                                                Nenhum prestador cadastrado ainda.
+                                            <?php endif; ?>
+                                        </p>
+                                        <?php if (empty($this->request->query('search'))): ?>
+                                            <a href="<?php echo $this->Html->url(array('action' => 'add')); ?>" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-plus-lg me-1"></i> Cadastrar primeiro prestador
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="<?php echo $this->Html->url(array('action' => 'index')); ?>" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-arrow-left me-1"></i> Voltar para lista completa
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($providers as $provider): ?>
-                            <tr style="border-bottom: 1px solid #EAECF0;">
+                            <tr style="border-bottom: 1px solid #EAECF0;" class="provider-row">
                                 <td class="ps-3 py-4 align-top">
                                     <div class="d-flex align-items-start">
                                         <?php
@@ -98,7 +145,6 @@
                                                     <div class="fw-bold text-dark"><?php echo h($provider['Provider']['name']); ?></div>
                                                     <div class="text-muted small"><?php echo h($provider['Provider']['email']); ?></div>
                                                 </div>
-                                                <!-- Mobile actions -->
                                                 <div class="d-lg-none d-flex gap-3 ms-2">
                                                     <a href="<?php echo $this->Html->url(array('action' => 'edit', $provider['Provider']['id'])); ?>" class="text-secondary" title="Editar">
                                                         <i class="bi bi-pencil"></i>
@@ -112,12 +158,10 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Mobile only: Phone -->
                                             <div class="d-md-none mt-2">
                                                 <span class="text-muted small"><i class="bi bi-telephone me-1"></i><?php echo h($provider['Provider']['phone']); ?></span>
                                             </div>
 
-                                            <!-- Mobile only: Services -->
                                             <div class="d-lg-none mt-3">
                                                 <?php if (!empty($provider['ProviderService'])): ?>
                                                     <table class="table table-sm table-borderless mb-0" style="font-size: 12px;">
@@ -159,13 +203,13 @@
 
                                 <td class="text-end pe-3 align-top py-4 d-none d-lg-table-cell">
                                     <div class="d-flex gap-3 justify-content-end">
-                                        <a href="<?php echo $this->Html->url(array('action' => 'edit', $provider['Provider']['id'])); ?>" class="text-secondary" title="Editar">
+                                        <a href="<?php echo $this->Html->url(array('action' => 'edit', $provider['Provider']['id'])); ?>" class="text-secondary action-btn" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <?php echo $this->Form->postLink(
                                             '<i class="bi bi-trash"></i>',
                                             array('action' => 'delete', $provider['Provider']['id']),
-                                            array('escape' => false, 'class' => 'text-secondary', 'title' => 'Excluir'),
+                                            array('escape' => false, 'class' => 'text-secondary action-btn', 'title' => 'Excluir'),
                                             __('Tem certeza que deseja excluir %s?', $provider['Provider']['name'])
                                         ); ?>
                                     </div>
@@ -183,6 +227,16 @@
                 </div>
                 <div class="d-flex gap-2">
                     <?php
+                    $this->Paginator->options(array(
+                        'url' => array(
+                            '?' => array(
+                                'search' => $this->request->query('search'),
+                                'sort' => $this->request->query('sort'),
+                                'direction' => $this->request->query('direction')
+                            )
+                        )
+                    ));
+
                     if ($this->Paginator->hasPrev()) {
                         echo $this->Paginator->prev('Anterior', array('class' => 'btn btn-light border btn-sm px-3'), null, array('class' => 'btn btn-light border btn-sm px-3 disabled'));
                     } else {
