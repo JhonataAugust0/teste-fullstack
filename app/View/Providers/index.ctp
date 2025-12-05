@@ -1,70 +1,281 @@
-<div class="providers index">
-	<h2><?php echo __('Providers'); ?></h2>
-	<div class="search-box" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #e1e1e1; border-radius: 4px;">
-		<?php
-		echo $this->Form->create('Provider', array('type' => 'get', 'url' => array('action' => 'index')));
-		echo $this->Form->input('search', array(
-			'label' => false,
-			'placeholder' => 'Buscar por nome, email ou telefone...',
-			'style' => 'width: 300px; display: inline-block;',
-			'value' => $this->request->query('search')
-		));
-		echo $this->Form->submit(__('Buscar'), array('div' => false, 'style' => 'display: inline-block; margin-left: 10px;'));
-		echo $this->Form->end();
-		?>
-	</div>
-	<hr>
-	<table cellpadding="0" cellspacing="0">
-	<thead>
-	<tr>
-			<th><?php echo $this->Paginator->sort('id'); ?></th>
-			<th><?php echo $this->Paginator->sort('name'); ?></th>
-			<th><?php echo $this->Paginator->sort('email'); ?></th>
-			<th><?php echo $this->Paginator->sort('phone'); ?></th>
-			<th><?php echo $this->Paginator->sort('photo'); ?></th>
-			<th><?php echo $this->Paginator->sort('created'); ?></th>
-			<th><?php echo $this->Paginator->sort('modified'); ?></th>
-			<th class="actions"><?php echo __('Actions'); ?></th>
-	</tr>
-	</thead>
-	<tbody>
-	<?php foreach ($providers as $provider): ?>
-	<tr>
-		<td><?php echo h($provider['Provider']['id']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['name']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['email']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['phone']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['photo']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['created']); ?>&nbsp;</td>
-		<td><?php echo h($provider['Provider']['modified']); ?>&nbsp;</td>
-		<td class="actions">
-			<?php echo $this->Html->link(__('View'), array('action' => 'view', $provider['Provider']['id'])); ?>
-			<?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $provider['Provider']['id'])); ?>
-			<?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $provider['Provider']['id']), array('confirm' => __('Are you sure you want to delete # %s?', $provider['Provider']['id']))); ?>
-		</td>
-	</tr>
-<?php endforeach; ?>
-	</tbody>
-	</table>
-	<p>
-	<?php
-	echo $this->Paginator->counter(array(
-		'format' => __('Page {:page} of {:pages}, showing {:current} records out of {:count} total, starting on record {:start}, ending on {:end}')
-	));
-	?>	</p>
-	<div class="paging">
-	<?php
-		echo $this->Paginator->prev('< ' . __('previous'), array(), null, array('class' => 'prev disabled'));
-		echo $this->Paginator->numbers(array('separator' => ''));
-		echo $this->Paginator->next(__('next') . ' >', array(), null, array('class' => 'next disabled'));
-	?>
-	</div>
+<div class="row justify-content-center">
+    <div class="col-12">
+
+        <div class="card-doity">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1 fs-3">Prestadores de Serviço</h2>
+                    <p class="text-muted mb-0 d-none d-md-block">Veja sua lista de prestadores de serviço</p>
+                </div>
+
+                <div class="d-flex gap-2 flex-shrink-0">
+                    <button type="button" class="btn btn-light border d-flex align-items-center gap-2 px-3" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="bi bi-upload"></i>
+                        <span class="d-none d-sm-inline">Importar</span>
+                    </button>
+                    <a href="<?php echo $this->Html->url(array('action' => 'add')); ?>" class="btn btn-danger text-white d-flex align-items-center gap-2 px-3">
+                        <i class="bi bi-plus-lg"></i>
+                        <span class="d-none d-sm-inline">Add novo prestador</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <?php echo $this->Form->create('Provider', array('type' => 'get', 'url' => array('action' => 'index'))); ?>
+                <div class="input-group" style="max-width: 100%;">
+                    <span class="input-group-text bg-white border-end-0 ps-3">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <?php echo $this->Form->input('search', array(
+                        'label' => false,
+                        'div' => false,
+                        'class' => 'form-control border-start-0 ps-2',
+                        'placeholder' => 'Buscar por nome, email ou telefone...',
+                        'value' => $this->request->query('search')
+                    )); ?>
+                </div>
+                <?php echo $this->Form->end(); ?>
+            </div>
+
+            <?php if (!empty($this->request->query('search'))): ?>
+                <div class="alert alert-light border d-flex align-items-center justify-content-between mb-4" style="background-color: #F9FAFB;">
+                    <div class="text-muted small">
+                        <i class="bi bi-funnel me-1"></i>
+                        Exibindo resultados para: <strong><?php echo h($this->request->query('search')); ?></strong>
+                    </div>
+                    <a href="<?php echo $this->Html->url(array('action' => 'index')); ?>" class="text-decoration-none small text-danger fw-bold">
+                        <i class="bi bi-x-lg me-1"></i> Limpar filtro
+                    </a>
+                </div>
+            <?php endif; ?>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col" class="py-3 ps-3 text-secondary small fw-bold" style="min-width: 200px;">
+                                <?php echo $this->Paginator->sort('name', 'Prestador', array('class' => 'text-decoration-none text-secondary d-inline-flex align-items-center gap-1')); ?>
+                            </th>
+
+                            <th scope="col" class="py-3 text-secondary small fw-bold d-none d-md-table-cell" style="width: 20%;">
+                                Telefone
+                            </th>
+
+                            <th scope="col" class="py-3 text-secondary small fw-bold d-none d-lg-table-cell" style="width: 40%;">
+                                <div class="d-flex justify-content-between pe-3">
+                                    <span>Serviços</span>
+                                    <span>Valor</span>
+                                </div>
+                            </th>
+
+                            <th scope="col" class="py-3 pe-3 text-end d-none d-lg-table-cell" style="width: 50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($providers)): ?>
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    Nenhum prestador encontrado.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($providers as $provider): ?>
+                            <tr style="border-bottom: 1px solid #EAECF0;">
+                                <td class="ps-3 py-4 align-top">
+                                    <div class="d-flex align-items-start">
+                                        <?php
+                                        $photoPath = !empty($provider['Provider']['photo']) ? $provider['Provider']['photo'] : null;
+                                        if ($photoPath && file_exists(WWW_ROOT . 'img' . DS . $photoPath)) {
+                                            echo $this->Html->image($photoPath, array('class' => 'rounded-circle me-3 flex-shrink-0', 'width' => '40', 'height' => '40', 'style' => 'object-fit: cover;'));
+                                        } else {
+                                            echo '<div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3 text-secondary fw-bold flex-shrink-0" style="width: 40px; height: 40px; background-color: #F2F4F7;">' . strtoupper(substr($provider['Provider']['name'], 0, 2)) . '</div>';
+                                        }
+                                        ?>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="fw-bold text-dark"><?php echo h($provider['Provider']['name']); ?></div>
+                                                    <div class="text-muted small"><?php echo h($provider['Provider']['email']); ?></div>
+                                                </div>
+                                                <!-- Mobile actions -->
+                                                <div class="d-lg-none d-flex gap-3 ms-2">
+                                                    <a href="<?php echo $this->Html->url(array('action' => 'edit', $provider['Provider']['id'])); ?>" class="text-secondary" title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <?php echo $this->Form->postLink(
+                                                        '<i class="bi bi-trash"></i>',
+                                                        array('action' => 'delete', $provider['Provider']['id']),
+                                                        array('escape' => false, 'class' => 'text-secondary', 'title' => 'Excluir'),
+                                                        __('Tem certeza que deseja excluir %s?', $provider['Provider']['name'])
+                                                    ); ?>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mobile only: Phone -->
+                                            <div class="d-md-none mt-2">
+                                                <span class="text-muted small"><i class="bi bi-telephone me-1"></i><?php echo h($provider['Provider']['phone']); ?></span>
+                                            </div>
+
+                                            <!-- Mobile only: Services -->
+                                            <div class="d-lg-none mt-3">
+                                                <?php if (!empty($provider['ProviderService'])): ?>
+                                                    <table class="table table-sm table-borderless mb-0" style="font-size: 12px;">
+                                                        <?php foreach ($provider['ProviderService'] as $ps): ?>
+                                                            <?php $serviceName = isset($ps['Service']['name']) ? $ps['Service']['name'] : 'Serviço'; ?>
+                                                            <tr>
+                                                                <td class="text-secondary ps-0 py-1" style="width: 60%;"><?php echo h($serviceName); ?></td>
+                                                                <td class="text-dark fw-medium text-end pe-0 py-1">R$ <?php echo number_format($ps['value'], 2, ',', '.'); ?></td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </table>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-muted align-top py-4 d-none d-md-table-cell">
+                                    <i class="bi bi-telephone me-1"></i><?php echo h($provider['Provider']['phone']); ?>
+                                </td>
+
+                                <td class="align-top py-4 d-none d-lg-table-cell">
+                                    <?php if (!empty($provider['ProviderService'])): ?>
+                                        <div class="d-flex flex-column gap-2">
+                                            <?php foreach ($provider['ProviderService'] as $ps): ?>
+                                                <?php $serviceName = isset($ps['Service']['name']) ? $ps['Service']['name'] : 'Serviço s/ nome'; ?>
+                                                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-1" style="border-color: #f2f4f7 !important;">
+                                                    <span class="text-dark small me-3"><?php echo h($serviceName); ?></span>
+                                                    <span class="fw-medium text-muted small text-nowrap">
+                                                        R$ <?php echo number_format($ps['value'], 2, ',', '.'); ?>
+                                                    </span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td class="text-end pe-3 align-top py-4 d-none d-lg-table-cell">
+                                    <div class="d-flex gap-3 justify-content-end">
+                                        <a href="<?php echo $this->Html->url(array('action' => 'edit', $provider['Provider']['id'])); ?>" class="text-secondary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <?php echo $this->Form->postLink(
+                                            '<i class="bi bi-trash"></i>',
+                                            array('action' => 'delete', $provider['Provider']['id']),
+                                            array('escape' => false, 'class' => 'text-secondary', 'title' => 'Excluir'),
+                                            __('Tem certeza que deseja excluir %s?', $provider['Provider']['name'])
+                                        ); ?>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center border-top pt-4 mt-2">
+                <div class="text-muted small">
+                    <?php echo $this->Paginator->counter(array('format' => __('Página {:page} de {:pages}'))); ?>
+                </div>
+                <div class="d-flex gap-2">
+                    <?php
+                    if ($this->Paginator->hasPrev()) {
+                        echo $this->Paginator->prev('Anterior', array('class' => 'btn btn-light border btn-sm px-3'), null, array('class' => 'btn btn-light border btn-sm px-3 disabled'));
+                    } else {
+                        echo '<button class="btn btn-light border btn-sm px-3" disabled>Anterior</button>';
+                    }
+                    if ($this->Paginator->hasNext()) {
+                        echo $this->Paginator->next('Próximo', array('class' => 'btn btn-light border btn-sm px-3'), null, array('class' => 'btn btn-light border btn-sm px-3 disabled'));
+                    } else {
+                        echo '<button class="btn btn-light border btn-sm px-3" disabled>Próximo</button>';
+                    }
+                    ?>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
-<div class="actions">
-	<h3><?php echo __('Actions'); ?></h3>
-	<ul>
-		<li><?php echo $this->Html->link(__('New Provider'), array('action' => 'add')); ?></li>
-		<li><?php echo $this->Html->link(__('List Services'), array('controller' => 'services', 'action' => 'index')); ?> </li>
-		<li><?php echo $this->Html->link(__('New Service'), array('controller' => 'services', 'action' => 'add')); ?> </li>
-	</ul>
+
+<style>
+    .modal-backdrop.show {
+        opacity: 0.25 !important;
+    }
+</style>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold fs-5" id="importModalLabel">Faça o upload da sua lista de servidores</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <?php echo $this->Form->create('Provider', array('url' => array('action' => 'import'), 'type' => 'file', 'id' => 'ImportForm')); ?>
+
+            <div class="modal-body px-4 pt-3 pb-4">
+                <div class="position-relative border border-dashed rounded-3 text-center bg-white p-5" style="border: 1px dashed #D0D5DD; transition: all 0.2s;" id="drop-zone">
+
+                    <?php echo $this->Form->input('file', array(
+                        'type' => 'file',
+                        'label' => false,
+                        'class' => 'position-absolute top-0 start-0 w-100 h-100',
+                        'style' => 'opacity: 0; cursor: pointer; z-index: 10;',
+                        'accept' => '.csv',
+                        'onchange' => "updateImportFile(this)"
+                    )); ?>
+
+                    <div class="d-flex flex-column align-items-center justify-content-center">
+                        <div class="p-2 bg-light rounded-circle mb-3" style="background-color: #F2F4F7;">
+                            <i class="bi bi-cloud-upload fs-4 text-secondary"></i>
+                        </div>
+                        <div class="small text-muted mb-1">
+                            <span class="fw-bold text-danger">Clique para enviar</span> ou arraste e solte
+                        </div>
+                        <div class="text-muted" style="font-size: 0.75rem;">CSV, XLS, XLSX (max. 25 MB)</div>
+                    </div>
+                </div>
+
+                <div id="import-file-preview" class="border rounded-3 p-3 align-items-center justify-content-between d-none mt-3" style="border-color: #EAECF0 !important; display: flex;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded p-2 text-danger" style="background-color: #FEF3F2;">
+                            <i class="bi bi-file-earmark-spreadsheet fs-5"></i>
+                        </div>
+                        <div>
+                            <div id="import-file-name" class="fw-medium text-dark small">arquivo.csv</div>
+                            <div id="import-file-size" class="text-muted" style="font-size: 0.7rem;">0 KB</div>
+                        </div>
+                    </div>
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <div class="d-flex w-100 gap-2">
+                    <button type="button" class="btn btn-light border w-50" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger text-white w-50">Adicionar</button>
+                </div>
+            </div>
+
+            <?php echo $this->Form->end(); ?>
+        </div>
+    </div>
 </div>
+
+<script>
+function updateImportFile(input) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+
+        document.getElementById('import-file-preview').classList.remove('d-none');
+
+        document.getElementById('import-file-name').textContent = file.name;
+        document.getElementById('import-file-size').textContent = (file.size / 1024).toFixed(2) + ' KB';
+    }
+}
+</script>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Provider Service
+ * Provider Business Service
  *
  * Camada de serviço responsável pela lógica de negócios relacionada a Prestadores.
  * Separa as regras de negócio da camada de apresentação (Controller).
@@ -10,7 +10,7 @@
 
 App::uses('AppModel', 'Model');
 
-class ProviderService {
+class ProviderBusinessService {
 
 /**
  * Instância do Model Provider
@@ -67,6 +67,13 @@ class ProviderService {
 
         return array(
             'conditions' => $conditions,
+            'contain' => array(
+                'ProviderService' => array(
+                    'Service' => array(
+                        'fields' => array('Service.id', 'Service.name')
+                    )
+                )
+            ),
             'limit' => 10,
             'order' => array('Provider.created' => 'desc')
         );
@@ -86,7 +93,11 @@ class ProviderService {
 
         return $this->_Provider->find('first', array(
             'conditions' => array('Provider.id' => $id),
-            'contain' => array('Service')
+            'contain' => array(
+                'ProviderService' => array(
+                    'Service'
+                )
+            )
         ));
     }
 
@@ -97,32 +108,46 @@ class ProviderService {
  * @return array Resultado da operação com status e mensagem
  */
     public function create($data) {
+    $dataSource = $this->_Provider->getDataSource();
+    $dataSource->begin();
+
+    try {
         $this->_Provider->create();
 
-        // Processa upload de foto se enviada
         $uploadResult = $this->_processPhotoUpload($data);
-        if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+
+        if (!$uploadResult['success']) {
             return array(
                 'success' => false,
-                'message' => $uploadResult['error']
+                'message' => isset($uploadResult['error']) ? $uploadResult['error'] : __('Erro no upload.')
             );
         }
+
         $data = $uploadResult['data'];
 
-        if ($this->_Provider->save($data)) {
+        if ($this->_Provider->saveAssociated($data, array('deep' => true))) {
+
+            $dataSource->commit();
+
             return array(
                 'success' => true,
-                'message' => __('Prestador salvo com sucesso.'),
+                'message' => __('Prestador e serviços salvos com sucesso.'),
                 'id' => $this->_Provider->id
             );
+        } else {
+            throw new Exception(__('Erro de validação'));
         }
+
+    } catch (Exception $e) {
+        $dataSource->rollback();
 
         return array(
             'success' => false,
-            'message' => __('Não foi possível salvar o prestador. Verifique os dados e tente novamente.'),
+            'message' => __('Não foi possível salvar. Verifique os campos destacados.'),
             'validationErrors' => $this->_Provider->validationErrors
         );
     }
+}
 
 /**
  * Atualiza um prestador existente
@@ -137,29 +162,44 @@ class ProviderService {
             throw new NotFoundException(__('Prestador não encontrado'));
         }
 
-        $data['Provider']['id'] = $id;
+        $dataSource = $this->_Provider->getDataSource();
+        $dataSource->begin();
 
-        $uploadResult = $this->_processPhotoUpload($data);
-        if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+        try {
+            $data['Provider']['id'] = $id;
+
+            $uploadResult = $this->_processPhotoUpload($data);
+            if (!$uploadResult['success'] && isset($uploadResult['error'])) {
+                return array(
+                    'success' => false,
+                    'message' => $uploadResult['error']
+                );
+            }
+            $data = $uploadResult['data'];
+
+            // Remove vínculos antigos de ProviderService antes de salvar os novos
+            $ProviderService = ClassRegistry::init('ProviderService');
+            $ProviderService->deleteAll(array('ProviderService.provider_id' => $id), false);
+
+            // Salva Provider + novos vínculos (ProviderService)
+            if ($this->_Provider->saveAssociated($data, array('deep' => true))) {
+                $dataSource->commit();
+                return array(
+                    'success' => true,
+                    'message' => __('Prestador atualizado com sucesso.')
+                );
+            } else {
+                throw new Exception(__('Erro de validação'));
+            }
+
+        } catch (Exception $e) {
+            $dataSource->rollback();
             return array(
                 'success' => false,
-                'message' => $uploadResult['error']
+                'message' => __('Erro ao atualizar o prestador. Verifique os dados e tente novamente.'),
+                'validationErrors' => $this->_Provider->validationErrors
             );
         }
-        $data = $uploadResult['data'];
-
-        if ($this->_Provider->save($data)) {
-            return array(
-                'success' => true,
-                'message' => __('Prestador atualizado com sucesso.')
-            );
-        }
-
-        return array(
-            'success' => false,
-            'message' => __('Erro ao atualizar o prestador. Verifique os dados e tente novamente.'),
-            'validationErrors' => $this->_Provider->validationErrors
-        );
     }
 
 /**
@@ -181,7 +221,6 @@ class ProviderService {
         ));
 
         if ($this->_Provider->delete($id)) {
-            // Remove a foto do servidor se existir
             if (!empty($provider['Provider']['photo'])) {
                 $this->_removePhoto($provider['Provider']['photo']);
             }
@@ -205,53 +244,40 @@ class ProviderService {
  * @return array Dados processados com resultado do upload
  */
     protected function _processPhotoUpload($data) {
-        // Verifica se foi enviada uma foto
-        if (empty($data['Provider']['photo']['name'])) {
-            unset($data['Provider']['photo']);
-            return array('success' => true, 'data' => $data);
-        }
+		// 1. Verifica se existe arquivo enviado
+		if (empty($data['Provider']['photo']['name'])) {
+			unset($data['Provider']['photo']);
+			return array('success' => true, 'data' => $data);
+		}
 
-        $file = $data['Provider']['photo'];
+		$file = $data['Provider']['photo'];
+		$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+		$allowed = array('jpg', 'jpeg', 'png', 'gif');
 
-        // Valida o arquivo
-        $validationResult = $this->_validateUploadedFile($file);
-        if (!$validationResult['valid']) {
-            unset($data['Provider']['photo']);
-            return array(
-                'success' => false,
-                'error' => $validationResult['message'],
-                'data' => $data
-            );
-        }
+		// 2. Valida Extensão
+		if (!in_array($ext, $allowed)) {
+			return array('success' => false, 'error' => 'Formato de imagem inválido (use JPG ou PNG).');
+		}
 
-        // Gera nome único para o arquivo
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $newName = $this->_generateUniqueFileName($ext);
-        $uploadPath = $this->_getUploadPath();
+		// 3. Prepara Diretório
+		$new_name = uniqid() . '.' . $ext;
+		$path = WWW_ROOT . 'img' . DS . 'uploads';
 
-        // Cria diretório se não existir
-        if (!$this->_ensureUploadDirectory($uploadPath)) {
-            unset($data['Provider']['photo']);
-            return array(
-                'success' => false,
-                'error' => __('Erro ao criar diretório de uploads.'),
-                'data' => $data
-            );
-        }
+		// Tenta criar pasta se não existir
+		if (!file_exists($path)) {
+			if (!@mkdir($path, 0777, true) && !is_dir($path)) {
+				return array('success' => false, 'error' => 'Erro de permissão: Não foi possível criar a pasta de uploads.');
+			}
+		}
 
-        // Move o arquivo
-        if (move_uploaded_file($file['tmp_name'], $uploadPath . DS . $newName)) {
-            $data['Provider']['photo'] = $this->_uploadDir . '/' . $newName;
-            return array('success' => true, 'data' => $data);
-        }
-
-        unset($data['Provider']['photo']);
-        return array(
-            'success' => false,
-            'error' => __('Falha no upload da imagem. Verifique as permissões do servidor.'),
-            'data' => $data
-        );
-    }
+		// 4. Move o arquivo
+		if (move_uploaded_file($file['tmp_name'], $path . DS . $new_name)) {
+			$data['Provider']['photo'] = 'uploads/' . $new_name;
+			return array('success' => true, 'data' => $data);
+		} else {
+			return array('success' => false, 'error' => 'Falha ao mover o arquivo. Verifique permissões da pasta img.');
+		}
+	}
 
 /**
  * Valida o arquivo enviado

@@ -1,12 +1,12 @@
 <?php
 App::uses('AppController', 'Controller');
-App::uses('ProviderService', 'Lib/Service');
+App::uses('ProviderBusinessService', 'Lib/Service');
 
 /**
  * Providers Controller
  *
  * Controlador responsável pela gestão de prestadores de serviço.
- * Delega a lógica de negócios para a camada de serviço (ProviderService).
+ * Delega a lógica de negócios para a camada de serviço (ProviderBusinessService).
  *
  * @property Provider $Provider
  * @property PaginatorComponent $Paginator
@@ -24,7 +24,7 @@ class ProvidersController extends AppController {
 /**
  * Instância do serviço de prestadores
  *
- * @var ProviderService
+ * @var ProviderBusinessService
  */
     protected $_providerService;
 
@@ -35,7 +35,7 @@ class ProvidersController extends AppController {
  */
     public function beforeFilter() {
         parent::beforeFilter();
-        $this->_providerService = new ProviderService();
+        $this->_providerService = new ProviderBusinessService();
     }
 
 /**
@@ -46,13 +46,10 @@ class ProvidersController extends AppController {
  * @return void
  */
     public function index() {
-        $this->Provider->recursive = 0;
-        
-        $paginatorSettings = $this->_providerService->buildSearchConditions(
+        $this->Paginator->settings = $this->_providerService->buildSearchConditions(
             $this->request->query
         );
-        
-        $this->Paginator->settings = $paginatorSettings;
+
         $this->set('providers', $this->Paginator->paginate());
         $this->set('search', $this->request->query('search'));
     }
@@ -76,20 +73,32 @@ class ProvidersController extends AppController {
  */
     public function add() {
         if ($this->request->is('post')) {
+			if (isset($this->request->data['Provider']['first_name']) && isset($this->request->data['Provider']['last_name'])) {
+				$firstName = trim($this->request->data['Provider']['first_name']);
+				$lastName = trim($this->request->data['Provider']['last_name']);
+
+				$this->request->data['Provider']['name'] = $firstName . ' ' . $lastName;
+			}
+
             $result = $this->_providerService->create($this->request->data);
-            
+
             if ($result['success']) {
                 $this->Flash->success($result['message']);
                 return $this->redirect(array('action' => 'index'));
             }
-            
+
             $this->Flash->error($result['message']);
-            
+
             // Define erros de validação para exibição no formulário
             if (!empty($result['validationErrors'])) {
                 $this->Provider->validationErrors = $result['validationErrors'];
             }
         }
+
+        // Carrega a lista de serviços do Catálogo para o dropdown (id => name)
+        $this->loadModel('Service');
+        $services = $this->Service->find('list', array('order' => 'Service.name ASC'));
+        $this->set(compact('services'));
     }
 
 /**
@@ -104,22 +113,31 @@ class ProvidersController extends AppController {
         $provider = $this->_providerService->findById($id);
 
         if ($this->request->is(array('post', 'put'))) {
+            if (isset($this->request->data['Provider']['first_name']) && isset($this->request->data['Provider']['last_name'])) {
+                $firstName = trim($this->request->data['Provider']['first_name']);
+                $lastName = trim($this->request->data['Provider']['last_name']);
+                $this->request->data['Provider']['name'] = $firstName . ' ' . $lastName;
+            }
+
             $result = $this->_providerService->update($id, $this->request->data);
-            
+
             if ($result['success']) {
                 $this->Flash->success($result['message']);
                 return $this->redirect(array('action' => 'index'));
             }
-            
+
             $this->Flash->error($result['message']);
-            
+
             if (!empty($result['validationErrors'])) {
                 $this->Provider->validationErrors = $result['validationErrors'];
             }
         } else {
-            // Preenche o formulário com os dados atuais
             $this->request->data = $provider;
         }
+
+        $this->loadModel('Service');
+        $services = $this->Service->find('list', array('order' => 'Service.name ASC'));
+        $this->set(compact('services'));
     }
 
 /**
@@ -132,15 +150,15 @@ class ProvidersController extends AppController {
  */
     public function delete($id = null) {
         $this->request->allowMethod(array('post', 'delete'));
-        
+
         $result = $this->_providerService->delete($id);
-        
+
         if ($result['success']) {
             $this->Flash->success($result['message']);
         } else {
             $this->Flash->error($result['message']);
         }
-        
+
         return $this->redirect(array('action' => 'index'));
     }
 }

@@ -9,7 +9,90 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
-### Adicionado
+### Frontend UI Implementation (Fase 3)
+
+#### Adicionado
+- **Layout Bootstrap 5** (`5781457`)
+  - Substituído layout padrão do CakePHP por Bootstrap 5
+  - Fonte Inter e variáveis CSS customizadas
+  - Navbar responsiva com branding
+  - Removido `cake.generic.css` deprecado
+
+- **Componentes de UI** (`0970144`)
+  - `sidebar.ctp`: Navegação lateral com links para Prestadores e Serviços
+  - `Flash/success.ctp`: Template de mensagem de sucesso estilizado
+  - `Flash/error.ctp`: Template de mensagem de erro estilizado
+  - Ícones Bootstrap Icons integrados
+
+- **Views de Prestadores Estilizadas** (`b5b6284`)
+  - `index.ctp`: Listagem em cards com avatares, badges e coluna de serviços
+  - `add.ctp`: Formulário moderno com dropzone de foto e campos dinâmicos
+  - `edit.ctp`: Consistente com add, dados pré-populados
+  - Labels e placeholders em Português Brasileiro
+
+- **Rota da Página Inicial** (`f24234e`)
+  - `/` agora redireciona para listagem de prestadores
+  - Usuários aterrisam diretamente no CRUD principal
+
+#### Corrigido
+- **Carregamento de Serviços na Listagem** (`e1f38e7`)
+  - `buildSearchConditions()` agora inclui `contain` para ProviderService.Service
+  - Controller simplificado, removida duplicação de contain
+
+---
+
+### Refatoração: Modelo de Dados Corrigido (RF02)
+
+> **Motivação:** A implementação inicial usava relação 1:N simples (Service pertence a Provider),
+> mas os requisitos RF02 indicam que serviços são **tipos padronizados** que podem ser oferecidos
+> por **múltiplos prestadores** com preços diferentes. A refatoração implementa corretamente
+> a relação N:N com tabela pivô para atender aos requisitos do sistema.
+
+#### Antes (incorreto)
+```
+providers (1) ──────> (N) services
+                          ├── provider_id
+                          ├── name
+                          └── value
+```
+
+#### Depois (correto - RF02)
+```
+providers (N) <──── provider_services ────> (N) services
+                    ├── provider_id              ├── name (catálogo)
+                    ├── service_id               └── description
+                    └── value (preço específico)
+```
+
+#### Alterações no Banco de Dados
+- `services` → Agora é **Catálogo de Serviços** (Lista Mestre)
+  - Removido: `provider_id`, `value`
+  - Mantido: `id`, `name`, `description`, `created`, `modified`
+- `provider_services` → **Nova tabela pivô**
+  - `provider_id` (FK → providers)
+  - `service_id` (FK → services)
+  - `value` (preço específico do prestador)
+
+#### Alterações nos Models
+- `Service` → Simplificado para catálogo (hasMany ProviderService)
+- `ProviderService` → **Novo Model** para tabela pivô
+- `Provider` → hasMany ProviderService (antes: hasMany Service)
+
+#### Alterações na Camada de Serviço
+- `ProviderService.php` → Renomeado para `ProviderBusinessService.php`
+  - Evita conflito de nome com o novo Model `ProviderService`
+  - Gerencia Provider + vínculos via `saveAssociated()`
+- `ServiceService.php` → Simplificado (catálogo independente)
+
+#### Alterações nos Controllers
+- `ProvidersController` → Carrega serviços do catálogo para dropdown
+- `ServicesController` → Removida dependência de providers
+
+#### Alterações nas Views
+- `Providers/add|edit` → Dropdown de serviços + campo valor
+- `Providers/index` → Exibe serviços vinculados na listagem
+- `Providers/view` → Lista serviços com preços
+- `Services/*` → Interface simplificada de catálogo
 
 ---
 
