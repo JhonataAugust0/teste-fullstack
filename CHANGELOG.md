@@ -13,6 +13,62 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.2.0] - 2025-12-05
+
+### 📅 05/12/2025 - Dia 4: Frontend UI com Bootstrap 5
+
+#### Adicionado
+- **Layout Bootstrap 5** (`5781457`)
+  - Navbar responsiva com hamburger menu para mobile
+  - Container principal com card estilizado
+  - Integração com Google Fonts (Inter)
+  - CSS customizado em `webroot/css/style.css`
+
+- **Navegação Lateral** (`0970144`)
+  - Links ativos com destaque visual
+  - Flash messages estilizadas como toast
+
+- **Views de Prestadores** (`563bea3`)
+  - Listagem com tabela responsiva e paginação
+  - Foto do prestador com fallback para iniciais
+  - Exibição de serviços e valores por prestador
+  - Formulários de add/edit com Bootstrap 5
+
+- **Views de Serviços** (`33177da`, `d60c7aa`)
+  - Catálogo de serviços com cards modernos
+  - Formulários estilizados para add/edit
+  - Modal de importação CSV
+
+- **Modal de Importação** (`54c74f6`)
+  - Drag & drop para upload de arquivo CSV
+  - Validação de formato no frontend
+  - Feedback visual durante upload
+
+- **Responsividade Mobile** (`abf664e`)
+  - Telefone, serviços e valores visíveis no mobile
+  - Ícones de ação (editar/excluir) inline no mobile
+  - Tabela de serviços compacta para telas pequenas
+  - Menu hamburger fecha ao clicar nos links
+
+#### Alterado
+- **Rotas** (`f24234e`)
+  - Homepage redirecionada para `/providers`
+
+#### Corrigido
+- **Layout Corrompido** (`abf664e`)
+  - Removido jQuery e Bootstrap JS duplicados
+  - Corrigido tags `<body>` duplicadas
+
+- **Edição de Prestadores** (`33556ce`, `ef10fea`)
+  - Concatenação de first_name + last_name no edit
+  - Validação de tipo para foto e valor do serviço
+
+- **Estilos da Tabela** (`b0212e4`)
+  - Font-size 12px nos headers
+  - Removido text-uppercase
+
+---
+
 ## [0.1.0] - 2025-12-04
 
 ---
@@ -176,4 +232,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 | `cca7935` | 04/12 12:41 | docs | Atualiza roadmap com idiomas e API |
 | `c5eeaeb` | 04/12 12:49 | feat | Implementa filtros de busca nas listagens |
 | `aaeb7ee` | 04/12 12:54 | docs | Adiciona checklist de progresso |
+| `5781457` | 05/12 | feat | Layout Bootstrap 5 com CSS customizado |
+| `0970144` | 05/12 | feat | Navegação lateral e flash messages |
+| `563bea3` | 05/12 | feat | Views de prestadores com Bootstrap 5 |
+| `33177da` | 05/12 | feat | Catálogo de serviços estilizado |
+| `d60c7aa` | 05/12 | feat | Formulários de serviços com Bootstrap 5 |
+| `54c74f6` | 05/12 | feat | Modal de importação CSV |
+| `b0212e4` | 05/12 | style | Ajustes de font-size e uppercase |
+| `33556ce` | 05/12 | fix | Concatenação de nome no edit |
+| `ef10fea` | 05/12 | merge | Integra fix de edição de prestadores |
+| `abf664e` | 05/12 | fix | Responsividade mobile e limpeza do layout |
 
