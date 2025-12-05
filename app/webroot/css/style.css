@@ -82,8 +82,7 @@ h1, h2, h3, h4, h5 {
     background-color: #F9FAFB;
     color: #475467;
     font-weight: 500;
-    font-size: 0.75rem;
-    text-transform: uppercase;
+    font-size: 12px;
     border-bottom: 1px solid #EAECF0;
     padding-top: 12px;
     padding-bottom: 12px;
