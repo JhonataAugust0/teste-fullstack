@@ -74,7 +74,7 @@ class DATABASE_CONFIG {
 		'password' => 'doity_password',
 		'database' => 'desafio_doity',
 		'prefix' => '',
-		// 'encoding' => 'utf8',
+		'encoding' => 'utf8mb4',
 	);
 
 	public $test = array(
