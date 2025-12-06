@@ -278,3 +278,10 @@ Embora fora do escopo do MVP (Minimum Viable Product), a arquitetura foi prepara
     - [x] Cache de 15 minutos para reduzir queries ao banco.
     - [x] Invalidação automática ao alterar dados.
     - [x] Configuração via `core.php` do CakePHP.
+- [x] **CI/CD (Integração e Entrega Contínua):**
+    - [x] GitHub Actions para automação.
+    - [x] Workflow CI: Linter (PHP CodeSniffer).
+    - [x] Fail-fast: Pipeline falha na primeira falha de teste.
+    - [x] Workflow CD: Build e publicação de imagem Docker.
+    - [x] Publicação automática no GitHub Container Registry (ghcr.io).
+    - [x] Execução apenas na branch `main`.

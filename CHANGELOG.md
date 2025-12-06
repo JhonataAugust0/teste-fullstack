@@ -9,6 +9,29 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
+### CI/CD - Integração e Entrega Contínua
+
+#### Adicionado - Pipelines GitHub Actions
+- **Workflow de Integração Contínua (CI):**
+  - Executa apenas na branch `main` (push e pull requests)
+  - Linter PHP CodeSniffer com padrão CakePHP
+  - Testes unitários com banco MySQL de teste
+  - Fail-fast: Pipeline falha na primeira falha de teste (`--stop-on-failure`)
+  - Cache de dependências Composer para builds mais rápidos
+
+- **Workflow de Entrega Contínua (CD):**
+  - Build automático da imagem Docker
+  - Publicação no GitHub Container Registry (ghcr.io)
+  - Tags automáticas: `latest`, SHA do commit, nome da branch
+  - Cache de layers Docker via GitHub Actions
+  - Suporte a releases para versionamento
+
+- **Arquivos criados:**
+  - `.github/workflows/ci.yml` - Pipeline de lint e testes
+  - `.github/workflows/cd.yml` - Pipeline de build e publicação
+
+---
+
 ### Dashboard de Métricas
 
 #### Adicionado - Painel de Controle Completo
