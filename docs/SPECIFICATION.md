@@ -139,7 +139,54 @@ erDiagram
 ### RF03 -- Importação em Massa
 
 - **Entrada:** Arquivo CSV padronizado.
-- **Processamento:** O sistema deve validar linha a linha. Em caso de erro parcial, o sistema deve informar qual linha falhou ou rejeitar o lote (transacional).
+- **Processamento:** O sistema valida linha a linha. Em caso de erro parcial, as linhas válidas são importadas e as inválidas são reportadas.
+- **Rollback:** Se mais de 50% das linhas tiverem erros, a importação é cancelada.
+- **Múltiplos Serviços:** Permite adicionar vários serviços ao mesmo prestador.
+
+##### Formato do Arquivo CSV
+
+```csv
+name,email,phone,service_name,service_value
+João Silva,joao@email.com,(82) 99999-1111,Eletricista,150.00
+João Silva,joao@email.com,(82) 99999-1111,Encanador,200.00
+Maria Costa,maria@email.com,82988887777,Diarista,120.50
+Ana Santos,ana@email.com,(82) 77776-5555,
+```
+
+| Coluna | Obrigatório | Descrição |
+|--------|-------------|-----------|
+| `name` | ✅ Sim | Nome completo do prestador |
+| `email` | ✅ Sim | Email único (validado). Repetir para múltiplos serviços. |
+| `phone` | ✅ Sim | Telefone (formato livre) |
+| `service_name` | ❌ Não | Nome do serviço (criado automaticamente se não existir no catálogo) |
+| `service_value` | ⚠️ Condicional | Obrigatório se `service_name` estiver preenchido |
+
+**Limitações de Segurança:**
+- Tamanho máximo: 25MB
+- Máximo de linhas: 1.000
+- Codificação: UTF-8 recomendado
+- Delimitador: vírgula (`,`) ou ponto-e-vírgula (`;`) - auto-detectado
+
+#### Arquitetura de Segurança da Importação
+
+```
+CsvImportService (Orquestrador)
+├── CsvFileValidator     → Valida arquivo (extensão, MIME, tamanho, conteúdo)
+├── CsvRowValidator      → Valida e sanitiza dados (XSS, campos, formatos)
+└── Provider/Service     → Acesso direto aos Models (transação em lote)
+```
+
+**CsvFileValidator - Proteções:**
+- Validação de extensão E MIME type real
+- Detecção de padrões maliciosos (PHP, EXE, JavaScript)
+- Limite de linhas para prevenir DoS
+- Verificação de caracteres nulos/controle
+
+**CsvRowValidator - Proteções:**
+- Sanitização com `htmlspecialchars()` (XSS)
+- Validação de padrões proibidos (`<script>`, `onclick=`)
+- Limite de tamanho por campo (255 caracteres)
+- Validação de formato de email e valor monetário
 
 ------------------------------------------------------------------------
 
@@ -204,11 +251,13 @@ Embora fora do escopo do MVP (Minimum Viable Product), a arquitetura foi prepara
     - [x] Botão de submit no mobile para busca.
 
 ### 🚀 Fase 4: Funcionalidades Avançadas (Atividade 02)
-- [ ] **Importação CSV:**
-    - [ ] Upload de arquivo `.csv`.
-    - [ ] Parsing e Leitura do arquivo.
-    - [ ] Validação de dados do CSV.
-    - [ ] Inserção em massa no Banco de Dados.
+- [x] **Importação CSV:**
+    - [x] Upload de arquivo `.csv`.
+    - [x] Parsing e Leitura do arquivo (auto-detecção de delimitador).
+    - [x] Validação de dados do CSV (email duplicado, campos obrigatórios).
+    - [x] Inserção em massa no Banco de Dados (transacional).
+    - [x] Criação automática de serviços não existentes.
+    - [x] Mensagem de feedback com erros detalhados.
 
 ### 🏁 Fase 5: Documentação e Entrega
 - [x] Documentação Técnica (SPECIFICATION.md).

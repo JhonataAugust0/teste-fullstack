@@ -1,6 +1,7 @@
 <?php
 App::uses('AppController', 'Controller');
 App::uses('ProviderBusinessService', 'Lib/Service');
+App::uses('CsvImportService', 'Lib/Service');
 
 /**
  * Providers Controller
@@ -150,6 +151,43 @@ class ProvidersController extends AppController {
             $this->Flash->success($result['message']);
         } else {
             $this->Flash->error($result['message']);
+        }
+
+        return $this->redirect(array('action' => 'index'));
+    }
+
+/**
+ * Importa prestadores via arquivo CSV
+ *
+ * @return CakeResponse Redireciona para index com mensagem de resultado
+ * @throws MethodNotAllowedException Quando o método HTTP não é POST
+ */
+    public function import() {
+        $this->request->allowMethod(array('post'));
+
+        if (empty($this->request->data['Provider']['file'])) {
+            $this->Flash->error(__('Nenhum arquivo enviado.'));
+            return $this->redirect(array('action' => 'index'));
+        }
+
+        $importService = new CsvImportService();
+        $result = $importService->import($this->request->data['Provider']['file']);
+
+        if ($result['success']) {
+            $this->Flash->success($result['message']);
+        } else {
+            $errorMessage = $result['message'];
+
+            if (!empty($result['errors'])) {
+                $errorDetails = array_slice($result['errors'], 0, 5);
+                $details = array();
+                foreach ($errorDetails as $error) {
+                    $details[] = __('Linha %d: %s', $error['line'], $error['message']);
+                }
+                $errorMessage .= ' ' . implode('; ', $details);
+            }
+
+            $this->Flash->error($errorMessage);
         }
 
         return $this->redirect(array('action' => 'index'));

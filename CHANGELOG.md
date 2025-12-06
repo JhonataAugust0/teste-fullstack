@@ -9,6 +9,69 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
+### Importação CSV de Prestadores
+
+#### Adicionado - Funcionalidade de Importação em Massa
+- **Upload de arquivo CSV** via modal na listagem de prestadores
+  - Aceita arquivos .csv com até 25MB
+  - Auto-detecção de delimitador (vírgula ou ponto-e-vírgula)
+  - Limite de 1000 linhas por arquivo (previne DoS)
+
+- **Suporte a Múltiplos Serviços por Prestador**
+  - Para adicionar vários serviços, repita o email em linhas diferentes:
+    ```csv
+    João,joao@email.com,82999,Eletricista,150.00
+    João,joao@email.com,82999,Encanador,200.00
+    ```
+  - Sistema agrupa automaticamente por email antes de importar
+
+- **Arquitetura SRP - Serviços Especializados**
+  - `CsvFileValidator` - Validação de arquivo (extensão, MIME type, tamanho, conteúdo malicioso)
+  - `CsvRowValidator` - Validação e sanitização de dados (XSS, campos obrigatórios)
+  - `CsvImportService` - Orquestração do processo de importação
+
+#### Segurança Implementada
+- **CsvFileValidator:**
+  - Validação de MIME type real (não apenas extensão)
+  - Detecção de padrões maliciosos (executáveis, PHP, JavaScript)
+  - Proteção contra null bytes e caracteres de controle
+  - Limite de linhas para prevenir ataques DoS
+
+- **CsvRowValidator:**
+  - Sanitização com `htmlspecialchars()` para prevenir XSS
+  - Validação de padrões proibidos (`<script>`, `javascript:`, `onclick=`)
+  - Limite de tamanho de campos (255 caracteres)
+  - Validação e sanitização de valores monetários
+  - `service_value` obrigatório quando `service_name` está preenchido
+
+- **Transações:**
+  - Rollback automático se >50% das linhas tiverem erros
+  - Commit apenas quando maioria das importações for bem-sucedida
+
+#### Formato CSV Esperado
+```csv
+name,email,phone,service_name,service_value
+João Silva,joao@email.com,(82) 99999-1111,Eletricista,150.00
+João Silva,joao@email.com,(82) 99999-1111,Encanador,200.00
+Maria Costa,maria@email.com,(82) 88888-8888,Diarista,120.00
+Ana Santos,ana@email.com,(82) 77776-5555,,
+```
+
+**Colunas:**
+- `name`, `email`, `phone` → Obrigatórios
+- `service_name` → Opcional (serviço criado automaticamente se não existir)
+- `service_value` → Obrigatório se `service_name` estiver preenchido
+
+#### Arquivos Criados
+- `app/Lib/Service/CsvFileValidator.php` - Validação de segurança de arquivo
+- `app/Lib/Service/CsvRowValidator.php` - Validação e sanitização de dados
+- `app/Lib/Service/CsvImportService.php` - Orquestrador de importação
+
+#### Arquivos Modificados
+- `app/Controller/ProvidersController.php` - Action `import()` adicionada
+
+---
+
 ### UX Improvements
 
 #### Adicionado - Interface de Listagem
