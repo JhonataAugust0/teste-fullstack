@@ -2,6 +2,14 @@
 
 Sistema web desenvolvido em CakePHP 2 para gerenciamento de prestadores de serviço e seus serviços oferecidos.
 
+## 📹 Vídeo de Apresentação
+
+Preparei um vídeo demonstrando o funcionamento do sistema e explicando as principais decisões de arquitetura e produto tomadas durante o desenvolvimento.
+
+[![Assista ao vídeo no YouTube](https://img.youtube.com/vi/5yq61A1qd94/0.jpg)](https://www.youtube.com/watch?v=5yq61A1qd94)
+
+> **[Clique aqui para assistir ao vídeo completo](https://www.youtube.com/watch?v=5yq61A1qd94)**
+
 ## 🚀 Instalação
 
 ### 📋 Requisitos
@@ -184,3 +192,4 @@ A documentação completa está disponível em:
 - **[DATAFLOW.md](docs/DATAFLOW.md)** - Fluxos de dados e comunicação
 - **[REFERENCE.md](docs/REFERENCE.md)** - Referência de APIs e serviços
 - **[SPECIFICATION.md](docs/SPECIFICATION.md)** - Especificação do projeto de software
+ - **[EXPERIENCE_REPORT.md](docs/EXPERIENCE_REPORT.md)** - Relatório de experiência do candidato (decisões, trade-offs e justificativas)
