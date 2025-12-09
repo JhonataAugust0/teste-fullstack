@@ -275,4 +275,5 @@ app/Lib/Service/
 - [DATAFLOW.md](./DATAFLOW.md) - Fluxo de dados reativo
 - [REFERENCE.md](./REFERENCE.md) - Referência de componentes
 - [SPECIFICATION.md](./SPECIFICATION.md) - Especificação completa
+ - [EXPERIENCE_REPORT.md](./EXPERIENCE_REPORT.md) - Relatório de experiência do candidato: decisões, justificativas e lições aprendidas
 

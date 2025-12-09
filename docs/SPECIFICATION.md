@@ -82,6 +82,7 @@ Para mais detalhes sobre arquitetura, padrões e fluxos de dados, consulte:
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Filosofia, camadas e padrões
 - [DATAFLOW.md](./DATAFLOW.md) - Fluxos de dados e comunicação
 - [REFERENCE.md](./REFERENCE.md) - Referência completa de APIs
+ - [EXPERIENCE_REPORT.md](./EXPERIENCE_REPORT.md) - Relatório de experiência do candidato (decisões arquiteturais e trade-offs)
 
 
 ------------------------------------------------------------------------

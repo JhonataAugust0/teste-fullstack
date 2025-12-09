@@ -471,4 +471,5 @@ array(
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Visão arquitetural
 - [DATAFLOW.md](./DATAFLOW.md) - Fluxos de dados
 - [SPECIFICATION.md](./SPECIFICATION.md) - Especificação completa
+ - [EXPERIENCE_REPORT.md](./EXPERIENCE_REPORT.md) - Relatório de experiência do candidato (decisões técnicas e aprendizados)
 
